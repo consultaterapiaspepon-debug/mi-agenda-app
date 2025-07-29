@@ -5,10 +5,6 @@ import { getFirestore, collection, addDoc, onSnapshot, doc, updateDoc, deleteDoc
 import { setLogLevel } from "firebase/firestore";
 
 // --- Firebase Configuration ---
-// Esta es la parte MÁS IMPORTANTE para que funcione en Vercel.
-// Lee las "llaves secretas" que guardaste en "Environment Variables" de Vercel.
-// El código ANTIGUO usaba "__firebase_config", que solo funciona en este entorno de chat.
-// Este código NUEVO usa "process.env.REACT_APP_FIREBASE_CONFIG", que es la forma correcta para una app en producción.
 const firebaseConfigString = process.env.REACT_APP_FIREBASE_CONFIG;
 const firebaseConfig = firebaseConfigString ? JSON.parse(firebaseConfigString) : {};
 const appId = process.env.REACT_APP_APP_ID || 'default-app-id';
@@ -18,9 +14,6 @@ let app;
 let auth;
 let db;
 
-// Esta comprobación es un seguro de vida.
-// Solo intenta conectar con Firebase si las llaves secretas existen (comprobando si existe la apiKey).
-// Si no, la app no se romperá, solo mostrará un mensaje de configuración.
 if (firebaseConfig && firebaseConfig.apiKey) {
     app = initializeApp(firebaseConfig);
     auth = getAuth(app);
@@ -56,7 +49,6 @@ export default function App() {
 
     // --- Authentication Effect ---
     useEffect(() => {
-        // Si la autenticación de Firebase no se ha inicializado, no hagas nada.
         if (!auth) {
             console.log("Firebase not configured. Waiting for config.");
             setLoading(false);
@@ -170,7 +162,7 @@ export default function App() {
     // --- Render UI ---
      if (!firebaseReady) {
         return (
-            <div className="min-h-screen bg-gray-100 dark:bg-gray-900 text-gray-800 dark:text-gray-200 flex items-center justify-center font-sans p-4">
+            <div className="min-h-screen bg-gray-100 flex items-center justify-center font-sans p-4">
                 <div className="text-center">
                     <h2 className="text-xl font-semibold">Configurando la aplicación...</h2>
                     <p className="text-gray-500">Asegúrate de haber añadido las variables de entorno en Vercel.</p>
@@ -180,69 +172,69 @@ export default function App() {
     }
     
     return (
-        <div className="min-h-screen bg-gray-100 dark:bg-gray-900 text-gray-800 dark:text-gray-200 flex items-center justify-center font-sans p-4">
-            <div className="w-full max-w-2xl bg-white dark:bg-gray-800 rounded-2xl shadow-2xl p-6 sm:p-8">
-                <div className="flex items-center justify-between mb-6">
-                    <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Mi Agenda</h1>
-                    <div className="text-sm text-gray-500 dark:text-gray-400">
+        <div className="min-h-screen bg-gradient-to-br from-blue-100 to-indigo-200 flex items-center justify-center font-sans p-4">
+            <div className="w-full max-w-2xl bg-white/70 backdrop-blur-xl rounded-2xl shadow-2xl p-6 sm:p-8">
+                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-6 gap-2">
+                    <h1 className="text-3xl font-bold text-gray-800">Mi Agenda</h1>
+                    <div className="text-sm font-medium text-gray-600 bg-white/50 px-3 py-1 rounded-full">
                         {new Date().toLocaleDateString('es-ES', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
                     </div>
                 </div>
 
-                <form onSubmit={handleAddTask} className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-6">
+                <form onSubmit={handleAddTask} className="flex flex-col sm:flex-row gap-3 mb-6">
                     <input
                         type="text"
                         value={newTask}
                         onChange={(e) => setNewTask(e.target.value)}
                         placeholder="Añadir una nueva tarea..."
-                        className="sm:col-span-2 flex-grow p-3 bg-gray-100 dark:bg-gray-700 border-2 border-transparent focus:border-blue-500 focus:ring-0 rounded-lg outline-none transition"
+                        className="flex-grow p-3 bg-white/80 border-2 border-transparent focus:border-blue-500 focus:ring-0 rounded-lg outline-none transition shadow-inner"
                     />
                     <input
                         type="datetime-local"
                         value={newDueDate}
                         onChange={(e) => setNewDueDate(e.target.value)}
-                        className="p-3 bg-gray-100 dark:bg-gray-700 border-2 border-transparent focus:border-blue-500 focus:ring-0 rounded-lg outline-none transition"
+                        className="p-3 bg-white/80 border-2 border-transparent focus:border-blue-500 focus:ring-0 rounded-lg outline-none transition shadow-inner"
                     />
-                    <button type="submit" className="sm:col-span-3 bg-blue-600 text-white font-semibold px-6 py-3 rounded-lg hover:bg-blue-700 transition-transform transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50 shadow-lg">
-                        Añadir Tarea
+                    <button type="submit" className="bg-blue-600 text-white font-semibold px-6 py-3 rounded-lg hover:bg-blue-700 transition-transform transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50 shadow-lg">
+                        Añadir
                     </button>
                 </form>
 
                 <div className="space-y-4">
                     {loading ? <p className="text-center text-gray-500">Cargando tareas...</p> : tasks.length === 0 ? (
-                        <div className="text-center py-8 px-4 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
+                        <div className="text-center py-8 px-4 bg-white/50 rounded-lg">
                             <svg className="mx-auto h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
-                            <h3 className="mt-2 text-sm font-medium text-gray-900 dark:text-white">Todo despejado</h3>
-                            <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">¡Añade una tarea para empezar!</p>
+                            <h3 className="mt-2 text-sm font-medium text-gray-800">Todo despejado</h3>
+                            <p className="mt-1 text-sm text-gray-500">¡Añade una tarea para empezar!</p>
                         </div>
                     ) : (
                         tasks.map(task => (
-                            <div key={task.id} className="p-4 rounded-lg transition-all duration-300 bg-gray-100 dark:bg-gray-700/60">
+                            <div key={task.id} className={`p-4 rounded-lg transition-all duration-300 ${task.completed ? 'bg-green-100/70' : 'bg-white/60'}`}>
                                 {editingTaskId === task.id ? (
                                     <div className="space-y-3">
-                                        <input type="text" value={editingTaskText} onChange={(e) => setEditingTaskText(e.target.value)} className="w-full p-2 bg-white dark:bg-gray-600 rounded-md"/>
-                                        <input type="datetime-local" value={editingDueDate} onChange={(e) => setEditingDueDate(e.target.value)} className="w-full p-2 bg-white dark:bg-gray-600 rounded-md"/>
+                                        <input type="text" value={editingTaskText} onChange={(e) => setEditingTaskText(e.target.value)} className="w-full p-2 bg-white rounded-md shadow-inner"/>
+                                        <input type="datetime-local" value={editingDueDate} onChange={(e) => setEditingDueDate(e.target.value)} className="w-full p-2 bg-white rounded-md shadow-inner"/>
                                         <div className="flex justify-end gap-2">
-                                            <button onClick={handleCancelEdit} className="px-4 py-2 text-sm rounded-md text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600">Cancelar</button>
+                                            <button onClick={handleCancelEdit} className="px-4 py-2 text-sm rounded-md text-gray-600 hover:bg-gray-200">Cancelar</button>
                                             <button onClick={() => handleUpdateTask(task.id)} className="px-4 py-2 text-sm rounded-md text-white bg-green-500 hover:bg-green-600">Guardar</button>
                                         </div>
                                     </div>
                                 ) : (
                                     <div className="flex items-start">
                                         <div className="flex-grow flex items-start">
-                                            <div onClick={() => handleToggleTask(task.id, task.completed)} className={`flex-shrink-0 w-6 h-6 rounded-full border-2 mt-1 cursor-pointer ${task.completed ? 'bg-blue-500 border-blue-500' : 'border-gray-300 dark:border-gray-500'} flex items-center justify-center mr-4 transition-all`}>
+                                            <div onClick={() => handleToggleTask(task.id, task.completed)} className={`flex-shrink-0 w-6 h-6 rounded-full border-2 mt-1 cursor-pointer ${task.completed ? 'bg-blue-500 border-blue-500' : 'border-gray-400'} flex items-center justify-center mr-4 transition-all`}>
                                                 {task.completed && <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M5 13l4 4L19 7"></path></svg>}
                                             </div>
                                             <div className="flex-grow">
-                                                <span className={`font-medium ${task.completed ? 'line-through text-gray-500 dark:text-gray-400' : 'text-gray-800 dark:text-gray-200'}`}>{task.text}</span>
-                                                {task.dueDate && <p className="text-xs text-blue-500 dark:text-blue-400 mt-1">{formatDate(task.dueDate)}</p>}
+                                                <span className={`font-medium ${task.completed ? 'line-through text-gray-500' : 'text-gray-800'}`}>{task.text}</span>
+                                                {task.dueDate && <p className="text-xs text-blue-600 font-semibold mt-1">{formatDate(task.dueDate)}</p>}
                                             </div>
                                         </div>
                                         <div className="flex-shrink-0 flex items-center gap-2 ml-4">
-                                            <button onClick={() => handleStartEdit(task)} className="text-gray-400 hover:text-blue-500 transition-colors">
+                                            <button onClick={() => handleStartEdit(task)} className="text-gray-500 hover:text-blue-600 transition-colors">
                                                 <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.5L16.732 3.732z" /></svg>
                                             </button>
-                                            <button onClick={() => handleDeleteTask(task.id)} className="text-gray-400 hover:text-red-500 transition-colors">
+                                            <button onClick={() => handleDeleteTask(task.id)} className="text-gray-500 hover:text-red-600 transition-colors">
                                                 <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
                                             </button>
                                         </div>
@@ -252,7 +244,6 @@ export default function App() {
                         ))
                     )}
                 </div>
-                {userId && <p className="text-xs text-center mt-6 text-gray-400 dark:text-gray-500">ID de Usuario: {userId}</p>}
             </div>
         </div>
     );
