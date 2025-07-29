@@ -5,15 +5,23 @@ import { getFirestore, collection, addDoc, onSnapshot, doc, updateDoc, deleteDoc
 import { setLogLevel } from "firebase/firestore";
 
 // --- Firebase Configuration ---
-// ATENCIÓN: Estas líneas se modificarán después para el despliegue
-const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : {};
-const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+// Lee las "llaves secretas" desde las Variables de Entorno de Vercel
+const firebaseConfig = JSON.parse(process.env.REACT_APP_FIREBASE_CONFIG || '{}');
+const appId = process.env.REACT_APP_APP_ID || 'default-app-id';
 
 // --- Initialize Firebase ---
-const app = initializeApp(firebaseConfig);
-const auth = getAuth(app);
-const db = getFirestore(app);
-setLogLevel('debug');
+let app;
+let auth;
+let db;
+
+// Evita que la app crashee si las llaves no están presentes durante la construcción
+if (firebaseConfig && Object.keys(firebaseConfig).length > 0) {
+    app = initializeApp(firebaseConfig);
+    auth = getAuth(app);
+    db = getFirestore(app);
+    setLogLevel('debug');
+}
+
 
 // --- Helper Functions ---
 const formatDate = (dateString) => {
@@ -38,9 +46,16 @@ export default function App() {
     const [editingTaskId, setEditingTaskId] = useState(null);
     const [editingTaskText, setEditingTaskText] = useState('');
     const [editingDueDate, setEditingDueDate] = useState('');
+    const [firebaseReady, setFirebaseReady] = useState(false);
 
     // --- Authentication Effect ---
     useEffect(() => {
+        if (!auth) {
+            console.log("Firebase not configured. Waiting for config.");
+            setLoading(false);
+            return;
+        }
+        setFirebaseReady(true);
         const unsubscribe = onAuthStateChanged(auth, async (user) => {
             if (user) {
                 setUserId(user.uid);
@@ -57,7 +72,7 @@ export default function App() {
 
     // --- Firestore Data Fetching Effect ---
     useEffect(() => {
-        if (!userId) return;
+        if (!userId || !db) return;
 
         setLoading(true);
         const tasksCollectionPath = `artifacts/${appId}/users/${userId}/tasks`;
@@ -83,7 +98,7 @@ export default function App() {
     // --- Event Handlers ---
     const handleAddTask = async (e) => {
         e.preventDefault();
-        if (newTask.trim() === '' || !userId) return;
+        if (newTask.trim() === '' || !userId || !db) return;
         try {
             const tasksCollectionPath = `artifacts/${appId}/users/${userId}/tasks`;
             await addDoc(collection(db, tasksCollectionPath), {
@@ -100,7 +115,7 @@ export default function App() {
     };
 
     const handleToggleTask = async (id, completed) => {
-        if (!userId) return;
+        if (!userId || !db) return;
         const taskDocRef = doc(db, `artifacts/${appId}/users/${userId}/tasks`, id);
         try {
             await updateDoc(taskDocRef, { completed: !completed });
@@ -110,7 +125,7 @@ export default function App() {
     };
 
     const handleDeleteTask = async (id) => {
-        if (!userId) return;
+        if (!userId || !db) return;
         const taskDocRef = doc(db, `artifacts/${appId}/users/${userId}/tasks`, id);
         try {
             await deleteDoc(taskDocRef);
@@ -132,7 +147,7 @@ export default function App() {
     };
 
     const handleUpdateTask = async (id) => {
-        if (!userId || editingTaskText.trim() === '') return;
+        if (!userId || editingTaskText.trim() === '' || !db) return;
         const taskDocRef = doc(db, `artifacts/${appId}/users/${userId}/tasks`, id);
         try {
             await updateDoc(taskDocRef, {
@@ -146,6 +161,17 @@ export default function App() {
     };
 
     // --- Render UI ---
+     if (!firebaseReady) {
+        return (
+            <div className="min-h-screen bg-gray-100 dark:bg-gray-900 text-gray-800 dark:text-gray-200 flex items-center justify-center font-sans p-4">
+                <div className="text-center">
+                    <h2 className="text-xl font-semibold">Configurando Firebase...</h2>
+                    <p className="text-gray-500">Asegúrate de haber añadido las variables de entorno en Vercel.</p>
+                </div>
+            </div>
+        );
+    }
+    
     return (
         <div className="min-h-screen bg-gray-100 dark:bg-gray-900 text-gray-800 dark:text-gray-200 flex items-center justify-center font-sans p-4">
             <div className="w-full max-w-2xl bg-white dark:bg-gray-800 rounded-2xl shadow-2xl p-6 sm:p-8">
