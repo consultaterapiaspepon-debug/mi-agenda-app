@@ -5,8 +5,12 @@ import { getFirestore, collection, addDoc, onSnapshot, doc, updateDoc, deleteDoc
 import { setLogLevel } from "firebase/firestore";
 
 // --- Firebase Configuration ---
-// Lee las "llaves secretas" desde las Variables de Entorno de Vercel
-const firebaseConfig = JSON.parse(process.env.REACT_APP_FIREBASE_CONFIG || '{}');
+// Esta es la parte MÁS IMPORTANTE para que funcione en Vercel.
+// Lee las "llaves secretas" que guardaste en "Environment Variables" de Vercel.
+// El código ANTIGUO usaba "__firebase_config", que solo funciona en este entorno de chat.
+// Este código NUEVO usa "process.env.REACT_APP_FIREBASE_CONFIG", que es la forma correcta para una app en producción.
+const firebaseConfigString = process.env.REACT_APP_FIREBASE_CONFIG;
+const firebaseConfig = firebaseConfigString ? JSON.parse(firebaseConfigString) : {};
 const appId = process.env.REACT_APP_APP_ID || 'default-app-id';
 
 // --- Initialize Firebase ---
@@ -14,8 +18,10 @@ let app;
 let auth;
 let db;
 
-// Evita que la app crashee si las llaves no están presentes durante la construcción
-if (firebaseConfig && Object.keys(firebaseConfig).length > 0) {
+// Esta comprobación es un seguro de vida.
+// Solo intenta conectar con Firebase si las llaves secretas existen (comprobando si existe la apiKey).
+// Si no, la app no se romperá, solo mostrará un mensaje de configuración.
+if (firebaseConfig && firebaseConfig.apiKey) {
     app = initializeApp(firebaseConfig);
     auth = getAuth(app);
     db = getFirestore(app);
@@ -50,6 +56,7 @@ export default function App() {
 
     // --- Authentication Effect ---
     useEffect(() => {
+        // Si la autenticación de Firebase no se ha inicializado, no hagas nada.
         if (!auth) {
             console.log("Firebase not configured. Waiting for config.");
             setLoading(false);
@@ -165,7 +172,7 @@ export default function App() {
         return (
             <div className="min-h-screen bg-gray-100 dark:bg-gray-900 text-gray-800 dark:text-gray-200 flex items-center justify-center font-sans p-4">
                 <div className="text-center">
-                    <h2 className="text-xl font-semibold">Configurando Firebase...</h2>
+                    <h2 className="text-xl font-semibold">Configurando la aplicación...</h2>
                     <p className="text-gray-500">Asegúrate de haber añadido las variables de entorno en Vercel.</p>
                 </div>
             </div>
